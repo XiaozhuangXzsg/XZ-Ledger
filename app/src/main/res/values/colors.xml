@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="xz_window_bg">#FFF6F7FB</color>
+    <color name="xz_launcher_bg">#FFF5EFE6</color>
+
+    <!-- 桌面小组件：原神桑多涅风格（暖棕 / 金 / 米白 / 黑） -->
+    <color name="xz_gold">#FFC9A227</color>
+    <color name="xz_brown">#FF8A6E5A</color>
+    <color name="xz_dark">#FF1A1714</color>
+    <color name="xz_cream">#FFF5EFE6</color>
+    <color name="xz_cream_muted">#99F5EFE6</color>
+    <color name="xz_expense">#FFE2604A</color>
+    <color name="xz_income">#FF4C9A6A</color>
+    <!-- 小组件底色基准色：不透明，实际不透明度由运行时 tint（设置里的「背景透明度」）决定，
+         95% 时 = 原来的 #F21A1714 -->
+    <color name="xz_widget_bg">#FF1A1714</color>
+    <color name="xz_widget_border">#40C9A227</color>
+    <color name="xz_widget_track">#33F5EFE6</color>
+</resources>

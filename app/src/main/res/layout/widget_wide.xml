@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 根层：FrameLayout 才能把「玻璃高光层」垫在内容下面而不参与排版。
+     background = 可调透明度的圆角底色；foreground = 金色玻璃厚边（不受透明度影响）。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:foreground="@drawable/widget_bg_stroke">
+
+    <!-- ColorOS 17 液态玻璃：顶部高光渐隐，关闭「液态玻璃效果」时隐藏。
+         注意：RemoteViews 只允许白名单里的控件，裸 android.view.View 会抛
+         「Class not allowed to be inflated」，所以这里必须用 ImageView 承载背景。 -->
+    <ImageView
+        android:id="@+id/widget_gloss"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_gloss"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- 顶部：应用名 + 日期 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/widget_app_name"
+                android:textColor="@color/xz_gold"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txt_date"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:textColor="@color/xz_cream_muted"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- 主体：左侧今日收支，右侧本月预算环形条 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/widget_label_expense"
+                    android:textColor="@color/xz_cream_muted"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/txt_today_expense"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="¥0.00"
+                    android:textColor="@color/xz_expense"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="3dp"
+                    android:background="@drawable/widget_bar_track">
+                    <ProgressBar
+                        android:id="@+id/bar_expense"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/widget_bar_expense" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/widget_label_income"
+                    android:textColor="@color/xz_cream_muted"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/txt_today_income"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="¥0.00"
+                    android:textColor="@color/xz_income"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="3dp"
+                    android:background="@drawable/widget_bar_track">
+                    <ProgressBar
+                        android:id="@+id/bar_income"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/widget_bar_income" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- 预算：环形比例条（位图由 BudgetRing 绘制，中心为已用百分比） -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/txt_balance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="结余 ¥0.00"
+                    android:textColor="@color/xz_cream"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/img_budget_ring"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_marginTop="3dp"
+                    android:contentDescription="@string/widget_label_budget_month" />
+
+                <TextView
+                    android:id="@+id/txt_budget_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:maxLines="1"
+                    android:text="--"
+                    android:textColor="@color/xz_cream"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

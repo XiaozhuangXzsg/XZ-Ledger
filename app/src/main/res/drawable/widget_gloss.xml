@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ColorOS 17 液态玻璃高光层：顶部一层白色渐隐，叠在可调透明度的底色之上，
+     让 4x2 / 2x2 小组件也有玻璃的反光面；关闭「液态玻璃效果」时整层隐藏。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="24dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#2EFFFFFF"
+                android:centerColor="#0CFFFFFF"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

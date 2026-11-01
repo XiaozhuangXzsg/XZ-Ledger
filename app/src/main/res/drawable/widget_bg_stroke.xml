@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 小组件金色描边：作为根布局的 foreground 叠在可调透明度的底色之上，
+     这样调整背景透明度时描边不会被一起淡化。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="24dp" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/xz_widget_border" />
+</shape>

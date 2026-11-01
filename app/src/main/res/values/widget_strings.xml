@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_app_name">猫猫记账</string>
+    <string name="widget_wide_name">猫猫记账 · 今日概览（4x2）</string>
+    <string name="widget_square_name">猫猫记账 · 预算（2x2）</string>
+    <string name="widget_wide_desc">今日支出 / 今日收入 / 本月结余 + 本月预算环形条（中心为已用比例）</string>
+    <string name="widget_square_desc">今日收支、本月结余与本月预算环形条（中心为已用比例）</string>
+    <string name="widget_label_expense">今日支出</string>
+    <string name="widget_label_income">今日收入</string>
+    <string name="widget_label_budget">预算剩余</string>
+    <string name="widget_label_budget_month">本月预算（环形）</string>
+    <string name="widget_label_expense_short">支出</string>
+    <string name="widget_label_income_short">收入</string>
+    <string name="widget_label_budget_short">预算</string>
+    <string name="widget_budget_unset">未设置预算</string>
+    <string name="widget_budget_remaining_prefix">剩余\u0020</string>
+    <string name="widget_budget_over_prefix">超支\u0020</string>
+    <string name="widget_balance_prefix">结余\u0020</string>
+    <string name="widget_label_balance_month">本月结余</string>
+</resources>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 根层：FrameLayout 承载玻璃高光层；内容仍按原来的左右排布，避免 2x2 行高溢出。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:foreground="@drawable/widget_bg_stroke">
+
+    <!-- RemoteViews 不支持裸 android.view.View，必须用 ImageView（见 widget_wide.xml 注释）。 -->
+    <ImageView
+        android:id="@+id/widget_gloss"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_gloss"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="9dp">
+
+        <!-- 顶部：应用名 + 日期 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/widget_app_name"
+                android:textColor="@color/xz_gold"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txt_date"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:maxLines="1"
+                android:textColor="@color/xz_cream_muted"
+                android:textSize="9sp" />
+        </LinearLayout>
+
+        <!-- 主体：左侧今日收支，右侧本月预算环形条。
+             2x2 行高有限，改为左右排布 —— 竖排时环形条 + 底部「剩余」总高会超出行高，把最后一行裁掉。 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/widget_label_expense_short"
+                    android:textColor="@color/xz_cream_muted"
+                    android:textSize="9sp" />
+
+                <TextView
+                    android:id="@+id/txt_today_expense"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="¥0.00"
+                    android:textColor="@color/xz_expense"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="@string/widget_label_income_short"
+                    android:textColor="@color/xz_cream_muted"
+                    android:textSize="9sp" />
+
+                <TextView
+                    android:id="@+id/txt_today_income"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="¥0.00"
+                    android:textColor="@color/xz_income"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- 预算：环形比例条（位图由 BudgetRing 绘制，中心为已用百分比）+ 底部剩余金额 -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/img_budget_ring"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:contentDescription="@string/widget_label_budget_month" />
+
+                <TextView
+                    android:id="@+id/txt_budget_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:maxLines="1"
+                    android:text="--"
+                    android:textColor="@color/xz_cream"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/txt_balance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:maxLines="1"
+                    android:text="结余 ¥0.00"
+                    android:textColor="@color/xz_cream"
+                    android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
