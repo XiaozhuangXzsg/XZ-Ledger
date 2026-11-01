@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.xzledger.app.XzApp
 import com.xzledger.app.AppState
+import com.xzledger.app.data.AppLinks
 import com.xzledger.app.data.SettingsKeys
 import com.xzledger.app.data.Sync
 import com.xzledger.app.data.activeAiConfig
@@ -258,8 +259,8 @@ fun HelpScreen(state: AppState, nav: NavStack) {
 fun AboutScreen(state: AppState, nav: NavStack) {
     val store = XzApp.store
     val ctx = LocalContext.current
-    val github = store.str(SettingsKeys.GITHUB_URL, "")
-    val download = store.str(SettingsKeys.DOWNLOAD_URL, "")
+    val github = store.str(SettingsKeys.GITHUB_URL, AppLinks.GITHUB)
+    val download = store.str(SettingsKeys.DOWNLOAD_URL, AppLinks.RELEASE)
     var editGithub by remember { mutableStateOf(false) }
     var editDownload by remember { mutableStateOf(false) }
     var buffer by remember { mutableStateOf("") }
@@ -270,7 +271,7 @@ fun AboutScreen(state: AppState, nav: NavStack) {
                 GlassPanel(contentPadding = PaddingValues(16.dp)) {
                     Text("猫猫记账", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(6.dp))
-                    Text("版本 " + APP_VERSION + "（versionCode 5）", style = MaterialTheme.typography.bodySmall)
+                    Text("版本 " + APP_VERSION + "（versionCode 6）", style = MaterialTheme.typography.bodySmall)
                     Text("面向大学生日常收支的本地优先记账应用，优先适配 ColorOS。", style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(10.dp))
                     Text("开发者", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -283,16 +284,11 @@ fun AboutScreen(state: AppState, nav: NavStack) {
                 }
             }
             item {
-                MenuRow("给项目 Star", if (github.isEmpty()) "尚未配置 GitHub 地址" else github) {
-                    if (github.isEmpty()) editGithub = true
-                    else openUrl(ctx, github)
-                }.also { }
+                MenuRow("给项目 Star", github) { openUrl(ctx, github) }
             }
-            item { MenuRow("配置 GitHub 地址", "未配置时会保留入口，不会编造链接") { buffer = github; editGithub = true } }
-            item { MenuRow("分享应用", if (download.isEmpty()) "尚未配置下载地址与介绍" else download) {
-                shareApp(ctx, download)
-            } }
-            item { MenuRow("配置下载地址", "用于系统分享面板") { buffer = download; editDownload = true } }
+            item { MenuRow("配置 GitHub 地址", "留空则回到默认仓库 " + AppLinks.GITHUB) { buffer = github; editGithub = true } }
+            item { MenuRow("分享应用", download) { shareApp(ctx, download) } }
+            item { MenuRow("配置下载地址", "默认指向 GitHub 最新 Release；留空即用默认") { buffer = download; editDownload = true } }
             item { MenuRow("反馈", store.str(SettingsKeys.FEEDBACK, "尚未配置反馈方式")) { } }
             item { MenuRow("隐私说明", "所有账单数据默认仅保存在本机；AI 与云同步均为可选且需你主动配置") { } }
             item { Spacer(Modifier.height(40.dp)) }
@@ -333,7 +329,7 @@ fun shareApp(ctx: android.content.Context, download: String) {
     }
 }
 
-const val APP_VERSION = "1.0.4 rc1"
+const val APP_VERSION = "1.0.5 rc1"
 
 private fun entityLabel(entity: String): String = when (entity) {
     "txn" -> "账单"; "category" -> "分类"; "account" -> "账户"; "ledger" -> "账本"

@@ -70,6 +70,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.xzledger.app.AppState
 import com.xzledger.app.XzApp
+import com.xzledger.app.data.AppLinks
 import com.xzledger.app.data.SettingsKeys
 import com.xzledger.app.data.monthBalance
 import com.xzledger.app.data.monthBudgetTotal
@@ -234,16 +235,16 @@ fun MineScreen(state: AppState, nav: NavStack) {
         MineGroup("更多") {
             IconMenuRow(Icons.Outlined.BarChart, M_BLUE, "年度账单", "年收支、分类分布、长期与即时占比") { nav.push(Screen.ANNUAL) }
             IconMenuRow(Icons.Outlined.Info, M_GRAY, "关于", "版本 " + APP_VERSION + "、开发者与反馈") { nav.push(Screen.ABOUT) }
-            IconMenuRow(Icons.Outlined.StarBorder, M_GOLD, "给项目 Star", "打开已配置的 GitHub 地址，不会替你点 Star") {
-                val url = store.str(SettingsKeys.GITHUB_URL, "")
+            IconMenuRow(Icons.Outlined.StarBorder, M_GOLD, "给项目 Star", "打开 XZ-Ledger 仓库，不会替你点 Star") {
+                val url = store.str(SettingsKeys.GITHUB_URL, AppLinks.GITHUB)
                 if (url.isEmpty()) hint = "尚未配置 GitHub 地址，请到「关于」中填写后再打开"
                 else try {
                     ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                 } catch (e: Exception) { hint = "无法打开链接：" + url }
             }
-            IconMenuRow(Icons.Outlined.Share, M_TEAL, "分享应用", "调用系统分享面板") {
-                val url = store.str(SettingsKeys.DOWNLOAD_URL, "")
-                val text = "猫猫记账：面向大学生的日常收支记账应用。" + (if (url.isEmpty()) "（下载地址尚未配置）" else " 下载：" + url)
+            IconMenuRow(Icons.Outlined.Share, M_TEAL, "分享应用", "分享到 GitHub 最新 Release 的链接") {
+                val url = store.str(SettingsKeys.DOWNLOAD_URL, AppLinks.RELEASE)
+                val text = "猫猫记账：面向大学生的本地优先记账应用。" + (if (url.isEmpty()) "（下载地址尚未配置）" else " 最新版下载：" + url)
                 val i = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text) }
                 try { ctx.startActivity(Intent.createChooser(i, "分享应用")) } catch (e: Exception) { hint = "无法调用系统分享" }
             }

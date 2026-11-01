@@ -15,8 +15,8 @@ android {
         applicationId = "com.xzledger.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.0.4-rc1"
+        versionCode = 6
+        versionName = "1.0.5-rc1"
     }
 
     signingConfigs {

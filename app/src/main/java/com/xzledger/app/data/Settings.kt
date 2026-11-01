@@ -43,6 +43,15 @@ object SettingsKeys {
     const val MINE_ADVICE_DATE = "mine.advice_date"
 }
 
+/**
+ * 内置默认链接：GitHub 仓库与它的最新 Release。
+ * 「关于」里填了自定义地址就用自定义的；清空后回落到这里，保证「给项目 Star」「分享应用」始终可用。
+ */
+object AppLinks {
+    const val GITHUB = "https://github.com/XiaozhuangXzsg/XZ-Ledger"
+    const val RELEASE = "https://github.com/XiaozhuangXzsg/XZ-Ledger/releases/latest"
+}
+
 class Store(private val db: Db) {
     // 空字符串视为「未设置」，回落到默认值：避免历史迁移或异常写入留下的空值把默认值顶掉（曾导致 记账提醒 页 substring 崩溃）。
     fun str(key: String, def: String = ""): String = db.getSetting(key)?.ifEmpty { def } ?: def
