@@ -169,6 +169,14 @@ class Db(context: Context) : SQLiteOpenHelper(context.applicationContext, NAME, 
 
         db.execSQL("""CREATE TABLE setting(key TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT '')""")
 
+        // v4：通知自动记账。待确认交易与通知日志与账目表分离，
+        // 保证未确认的候选不会污染账本、统计与导出。
+        db.execSQL(AutoRecordSchema.CREATE_PENDING)
+        db.execSQL(AutoRecordSchema.CREATE_PENDING_INDEX)
+        db.execSQL(AutoRecordSchema.CREATE_NOTICE_LOG)
+        db.execSQL(AutoRecordSchema.CREATE_NOTICE_LOG_INDEX)
+        db.execSQL(AutoRecordSchema.CREATE_ACCOUNT_LINK)
+
         db.execSQL("""CREATE TABLE outbox(
             id TEXT PRIMARY KEY, entity TEXT NOT NULL, entity_id TEXT NOT NULL,
             op TEXT NOT NULL, payload TEXT NOT NULL DEFAULT '', base_version INTEGER NOT NULL DEFAULT 0,
@@ -187,6 +195,14 @@ class Db(context: Context) : SQLiteOpenHelper(context.applicationContext, NAME, 
             } catch (e: Exception) {
                 // 列已存在时忽略
             }
+        }
+        if (oldVersion < 4) {
+            // v4：通知自动记账新增待确认表、通知日志表、账户关联规则表。只增表，不动既有账目。
+            db.execSQL(AutoRecordSchema.CREATE_PENDING)
+            db.execSQL(AutoRecordSchema.CREATE_PENDING_INDEX)
+            db.execSQL(AutoRecordSchema.CREATE_NOTICE_LOG)
+            db.execSQL(AutoRecordSchema.CREATE_NOTICE_LOG_INDEX)
+            db.execSQL(AutoRecordSchema.CREATE_ACCOUNT_LINK)
         }
         if (oldVersion < 3) {
             // v3：学习记录增加来源列（ai = 由配置的模型学习产生，user = 用户修改后记录）。
@@ -482,6 +498,7 @@ class Db(context: Context) : SQLiteOpenHelper(context.applicationContext, NAME, 
 
     companion object {
         const val NAME = "xz_ledger.db"
-        const val VERSION = 3
+        /** 数据库结构版本。升版本必须同时补齐 onUpgrade 迁移，禁止破坏性重建。 */
+        const val VERSION = 4
     }
 }

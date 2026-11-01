@@ -41,6 +41,31 @@ object SettingsKeys {
     /** 桑多涅的月度评价：文本与生成日期（yyyy-MM-dd），一天最多生成一次。 */
     const val MINE_ADVICE_TEXT = "mine.advice_text"
     const val MINE_ADVICE_DATE = "mine.advice_date"
+
+    // ---- 通知自动记账（全部本地，不上传）----
+    /** 通知自动记账总开关。未开启时服务即使被系统绑定也不做任何解析。 */
+    const val NOTIFY_ENABLED = "notify.enabled"
+    /** 模式：off / confirm（待确认，默认）/ auto（自动记账）。 */
+    const val NOTIFY_MODE = "notify.mode"
+    /** 允许监听的应用包名（JSON 数组）。为空表示一个都不监听。 */
+    const val NOTIFY_PACKAGES = "notify.packages"
+    /** 允许「自动入账」的应用包名（JSON 数组）；空表示全部只进待确认。 */
+    const val NOTIFY_AUTO_PACKAGES = "notify.auto_packages"
+    const val NOTIFY_AUTO_INCOME = "notify.auto_income"
+    const val NOTIFY_AUTO_EXPENSE = "notify.auto_expense"
+    const val NOTIFY_TOAST = "notify.toast"
+    /** 首次进入通知自动记账页的隐私说明是否已确认。 */
+    const val NOTIFY_EXPLAINED = "notify.explained"
+    /** 每日本地解析记录条数上限（超出后裁剪最旧的）。 */
+    const val NOTIFY_LOG_KEEP = "notify.log_keep"
+
+    // ---- 应用内更新（GitHub Releases）----
+    /** 最近一次检查更新的时间戳（毫秒），用于「每天最多检查一次」。 */
+    const val UPDATE_LAST_CHECK = "update.last_check"
+    /** 用户点过「稍后再说」的时间戳，避免每次启动都打扰。 */
+    const val UPDATE_SNOOZE_UNTIL = "update.snooze_until"
+    /** 已忽略的版本号（versionCode），用户选择「跳过此版本」时写入。 */
+    const val UPDATE_SKIPPED_CODE = "update.skipped_code"
 }
 
 /**

@@ -17,6 +17,11 @@
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <queries>
+        <!-- Android 11+ 包可见性：监听应用列表需要看到已安装的桌面应用（银行/支付 App） -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
         </intent>
@@ -88,6 +93,16 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_square_info" />
         </receiver>
+
+        <service
+            android:name=".autorecord.NotifyListenerService"
+            android:exported="false"
+            android:label="@string/notify_service_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"

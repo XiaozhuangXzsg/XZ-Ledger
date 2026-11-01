@@ -56,6 +56,7 @@ enum class TxnSource(val id: String, val label: String) {
     IMPORT_PDF("import_pdf", "PDF 导入"),
     OCR("ocr", "图片识别"),
     RECURRING("recurring", "周期记账"),
+    NOTIFY("notify", "通知自动记账"),
     SYNC("sync", "云同步");
 
     companion object {

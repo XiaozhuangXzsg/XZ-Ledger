@@ -80,6 +80,8 @@ import com.xzledger.app.ui.MineScreen
 import com.xzledger.app.ui.NavStack
 import com.xzledger.app.ui.Route
 import com.xzledger.app.ui.SubScreens
+import com.xzledger.app.ui.UpdateHost
+import com.xzledger.app.update.Updater
 import com.xzledger.app.ui.theme.GlassBackdrop
 import com.xzledger.app.ui.theme.XzTheme
 import com.xzledger.app.ui.theme.liquidGlass
@@ -231,6 +233,10 @@ fun AppRoot(state: AppState) {
     // 首次启动确保存在默认账本，并校正指向已删除账本的设置。
     LaunchedEffect(Unit) { state.ensureDefaultLedger() }
 
+    // 启动时自动检查更新：一天最多一次，只在发现新版本时才弹窗。
+    val appCtx = LocalContext.current
+    LaunchedEffect(Unit) { Updater.check(appCtx, state.store, manual = false) }
+
     LaunchedEffect(state.pendingTab) {
         val t = state.pendingTab
         if (t != null) {
@@ -379,6 +385,9 @@ fun AppRoot(state: AppState) {
                 }
             }
         }
+
+        // 更新对话框覆盖在最上层，与子页面互不干扰。
+        UpdateHost()
     }
 }
 

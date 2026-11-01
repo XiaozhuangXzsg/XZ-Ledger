@@ -1,0 +1,116 @@
+name: Release APK
+
+# 打版本标签（例如 v1.0.6-rc1 / v1.0.6）时自动：构建签名 APK、算 SHA-256、
+# 生成 update.json（客户端更新器读取的元数据）、创建 GitHub Release 并上传资产。
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      # 签名材料来自仓库 Secrets，绝不写进代码或提交到仓库。
+      - name: Restore signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_BASE64:-}" ]; then
+            echo "缺少仓库 Secret：SIGNING_KEY_BASE64（release 签名密钥库的 base64）" >&2
+            exit 1
+          fi
+          mkdir -p keystore
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > keystore/xzledger-release.jks
+          cat > keystore.properties <<EOF
+          storeFile=keystore/xzledger-release.jks
+          storePassword=${KEYSTORE_PASSWORD}
+          keyAlias=${KEY_ALIAS}
+          keyPassword=${KEY_PASSWORD}
+          EOF
+
+      - name: Read version from build.gradle.kts
+        id: ver
+        run: |
+          set -euo pipefail
+          code=$(grep -m1 'versionCode = ' app/build.gradle.kts | grep -o '[0-9]\+')
+          name=$(grep -m1 'versionName = ' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Build release APK
+        run: gradle :app:assembleRelease --console=plain
+
+      - name: Verify signing and compute SHA-256
+        id: apk
+        run: |
+          set -euo pipefail
+          apk=app/build/outputs/apk/release/app-release.apk
+          test -f "$apk"
+          # 确认不是用 debug 密钥签的（防止 update.json 与客户端签名校验不一致）
+          apksigner verify --print-certs "$apk" > certs.txt
+          if grep -qi 'Android Debug' certs.txt; then
+            echo "release APK 被 debug 密钥签名，检查 Secrets 与 keystore.properties" >&2
+            exit 1
+          fi
+          sha=$(sha256sum "$apk" | awk '{print $1}')
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          cp "$apk" app-release.apk
+          size=$(stat -c%s app-release.apk)
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+
+      - name: Generate update.json
+        env:
+          CODE: ${{ steps.ver.outputs.code }}
+          NAME: ${{ steps.ver.outputs.name }}
+          SHA: ${{ steps.apk.outputs.sha }}
+          SIZE: ${{ steps.apk.outputs.size }}
+        run: |
+          set -euo pipefail
+          jq -n \
+            --argjson versionCode "$CODE" \
+            --arg versionName "$NAME" \
+            --arg apk "app-release.apk" \
+            --arg sha256 "$SHA" \
+            --argjson size "$SIZE" \
+            --arg notes "详细改动见本次 Release 说明。" \
+            '{versionCode: $versionCode, versionName: $versionName, apk: $apk, sha256: $sha256, size: $size, notes: $notes}' > update.json
+          cat update.json
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION_NAME: ${{ steps.ver.outputs.name }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          prerelease=""
+          case "$VERSION_NAME" in
+            *rc*|*RC*|*beta*|*alpha*) prerelease="--prerelease" ;;
+          esac
+          gh release create "$TAG" app-release.apk update.json \
+            --title "猫猫记账 $VERSION_NAME" \
+            --generate-notes \
+            $prerelease \
+            --verify-tag || gh release upload "$TAG" app-release.apk update.json --clobber

@@ -3,7 +3,7 @@
 面向大学生的安卓个人记账应用。**本地优先、离线可用、真实数据与真实业务逻辑**，不含静态页面、不伪造成功提示。
 优先适配 ColorOS 16（实测机型：一加 PLK110 / Android 16 / SDK 36），兼容其他 Android（minSdk 26）。
 
-当前版本 **1.0.5 rc1**（`versionCode = 6`；改版本时需同步 `app/build.gradle.kts` 的 `versionName`/`versionCode` 与 `ui/SettingsScreens.kt` 的 `APP_VERSION`）。
+当前版本 **1.0.6 rc1**（`versionCode = 7`；改版本时需同步 `app/build.gradle.kts` 的 `versionName`/`versionCode` 与 `ui/SettingsScreens.kt` 的 `APP_VERSION`）。
 
 应用显示名为 **猫猫记账**（`strings.xml` 的 `app_name`、通知、分享文案、默认备份/导出文件名 `catledger-backup.json` / `catledger-txns.csv`），应用内已不再出现旧名；Kotlin 包名与 `applicationId` 仍为 `com.xzledger.app`（改包名会让已安装用户的数据不兼容，故保留），备份文件内的 `format` 常量仍为 `xzledger-backup` 以兼容旧备份，另含一次性配色迁移（旧 `indigo` → `sandrone`）。
 
@@ -175,6 +175,22 @@ $env:ANDROID_HOME='D:\SDK'; $env:ANDROID_SDK_ROOT='D:\SDK'
   - Apple Liquid Glass 风格（第 10 项）：`ui/theme/Theme.kt` 的 `Appearance` 新增 `liquidApple: Boolean = false`（键 `appearance.liquid_apple`）；`ui/theme/Glass.kt` 的 `liquidGlass(...)` 开启时圆角放大 1.18 倍、基底透明度降到 0.44 / 0.28（strong 0.66 / 0.50）、阴影放大 1.7 倍并改低对比环境色、斜向镜面高光加宽、底缘加内阴影与彩色折射、描边 1.4dp 且更亮；`GlassBackdrop()` 的 Apple 分支改为「自上而下的白/黑薄雾 + 两团极低饱和 radial」。`ui/SettingsScreens.kt` 在「二次元元素」上方新增开关「Apple 液态玻璃（WWDC 2025）」。**如实说明**：Compose 无法对兄弟节点做真实高斯模糊，这里仍是分层模拟；本轮只改视觉层，未改业务流程、数据表结构与交互流程。
   - 版本号同步：`app/build.gradle.kts` versionCode 6 / versionName `1.0.5-rc1`，`ui/SettingsScreens.kt` 的 `APP_VERSION = "1.0.5 rc1"` 与关于页「（versionCode 6）」。
 
+- 第十二轮 A 通知自动记账（1.0.6 rc1 / versionCode 7；全部本机解析、默认待确认）：
+  - 权限与入口：`AndroidManifest.xml` 注册 `autorecord/NotifyListenerService.kt`（`android.permission.BIND_NOTIFICATION_LISTENER_SERVICE`，`exported="true"` + `android.service.notification.NotificationListenerService` 的 intent-filter）；「我的 → 智能记账 → 通知自动记账」新页面 `ui/NotifyScreens.kt`：首次使用前必须阅读的隐私与风险说明（只读勾选应用的通知、解析全在本机、不申请无障碍服务 / 不读短信数据库 / 不取银行账号密码、验证码与密码令牌类通知直接丢弃、可随时撤销授权或清除本地解析记录），一键跳系统「通知使用权」，页内实时显示「通知使用权：已授予 / 未授予」与「系统监听服务：已连接 / 未连接」并可「刷新状态」；总开关（`SettingsKeys.NOTIFY_ENABLED`）、模式三选（关闭 / 待确认（默认）/ 自动记账，`NOTIFY_MODE`）、待确认入口（带笔数）、自动记账记录（最近 100 条）、清除本地解析记录、监听应用多选。
+  - 来源判定按**包名**而非通知标题：`autorecord/NotifyPrefs.kt` 的 `installedApps(ctx)` 用 `queryIntentActivities(MAIN/LAUNCHER)` 列出真实已安装应用，`packages(store)` 存勾选的包名集合；`AndroidManifest.xml` 的 `<queries>` 增加 MAIN/LAUNCHER 意图，否则 Android 11+ 的包可见性会把列表削到只剩几个应用（本轮修复：此前搜索「支付宝」返回「没有匹配的应用」，不是搜索逻辑问题而是包不可见）。内置 10 组来源规则（支付宝、微信支付、云闪付 + 工商 / 建设 / 农业 / 中国 / 招商 / 交通 / 邮储银行），未内置的应用走通用规则（金额、方向、商户、余额），置信度更低、通常只进待确认；「解析规则」卡片按「已安装 / 未安装」标注每家银行。
+  - 解析：`autorecord/TxnParser.kt` 提取金额、方向、时间、机构、账户、卡尾号、商户、备注、币种、流水号、余额；**交易金额与账户余额严格分开**（「您尾号1234的储蓄卡于10月20日消费人民币35.80元，账户余额2580.36元。」→ 支出 35.80、余额 2580.36；「您的账户收到转账人民币500.00元。」→ 收入 500.00）；类型区分「消费 / 收入 / 退款 / 账户间转账 / 信用卡还款 / 提现充值 / 手续费利息 / 仅余额变动 / 非交易 / 无法确定」，银行内部转账与信用卡还款不会被记成新的收支；验证码、登录、广告、贷款、额度类通知直接过滤、不落库；置信度不足的识别结果只进待确认、绝不静默入账。
+  - 去重（`autorecord/NoticeDedup.kt` + `data/AutoRecordDao.kt` + `data/AutoRecordSchema.kt`）：有流水号时用「来源应用 + 流水号」强键，否则用「来源 + 方向 + 金额 + 分钟级时间 + 规范化商户」指纹；待确认表带唯一约束、写入前查重，所以同一条通知被系统重复投递、应用更新同一条通知、重启后重放都会落到同一指纹；跨来源（银行 App 与支付宝 / 微信）金额相同、方向相同、10 分钟内且来源不同只标「疑似重复」，只提示、不删除、不自动合并；**绝不只用金额判重**（连续两笔同额消费都能正常入账）。
+  - 三种模式与账户匹配：待确认（默认）下所有结果先进待确认，逐笔「确认入账 / 忽略」，确认后写入真实账本并 `state.touch()`，明细与统计即时刷新、无需重启；自动记账只在「格式完整、置信度高、账户已匹配、非重复」时才无人值守入账（每笔都带 `source = notify` 与去重键，可在账单详情删除、在「自动记账记录」里追溯）；账户按卡尾号 / 银行名匹配，多账户同时匹配时不自动挑、匹配不到就留空并在待确认里提示绑定，用户绑定后记住；从不读取或索取银行卡号、密码、短信验证码。
+  - 隐私边界：全部本机解析，默认不联网、不上传通知文本，也不接第三方分析；只保留结构化摘要（金额 / 方向 / 时间 / 商户 / 卡尾号 / 置信度），不保存通知原文；验证码 / 密码 / 登录令牌类通知在解析前丢弃；日志只打条数与结果、不打印正文与账号；关闭总开关即停止处理，「清除本地解析记录」清空待确认与记录、已入账账单不受影响。
+  - 测试：新增 `app/src/test/java/com/xzledger/app/autorecord/TxnParserTest.kt`（15 个虚构语料解析用例）与 `NoticeDedupTest.kt`（9 个指纹 / 跨来源用例），`gradle :app:testDebugUnitTest` 24 个用例全通过；debug 包另加「调试工具（仅调试版）→ 注入测试通知」按钮（`if (BuildConfig.DEBUG)` 门控），注入一条虚构银行通知走完整「解析 → 判断 → 待确认」链路，release 包不含该入口。
+- 第十二轮 B GitHub 应用内更新（非破坏性更新优先）：
+  - 仓库配置集中在 `update/UpdateConfig.kt`（`OWNER` / `REPO` / `RELEASES_API` / `METADATA_ASSET = "update.json"` / `CHECK_INTERVAL_MS = 24h` / `SNOOZE_INTERVAL_MS = 6h`），客户端不内置任何 GitHub Token、也不含签名私钥。
+  - 检查：`update/UpdateChecker.kt` 读 GitHub Releases API（`per_page=20`），跳过 `draft` 与 `prerelease`，**只按 versionCode 比高低**（versionName 仅用于展示）；versionCode 与 SHA-256 取自 Release 资产 `update.json`，缺失时明确提示「最新 Release（…）缺少 update.json，无法核对 versionCode 与 SHA-256，已跳过本次更新」而不做猜测；启动后最多每 24 小时自动检查一次，另有「我的 → 更多 → 检查更新」手动入口（`ui/UpdateScreens.kt`）；「稍后再说」静默 6 小时，不反复打扰。
+  - 安装前硬校验：`update/ApkVerifier.kt` 对**实际下载到的文件**计算 SHA-256 并与元数据比对，再校验包名 == `BuildConfig.APPLICATION_ID`、versionCode 不低于当前、签名证书 SHA-256 与当前应用一致（任何一项不符直接拒绝并给出中文原因，不做「先装再说」）；下载走应用私有目录 + `FileProvider`（`res/xml/file_paths.xml`）+ 系统安装器，不要求卸载、不清数据。
+  - 数据安全：不换 applicationId、不换签名，每次发版只递增 versionCode；更新是覆盖安装，SQLite（`xz_ledger.db`）与 SharedPreferences 原样保留，数据库升级仍只有 `onUpgrade` 里的非破坏性迁移；「导出与备份恢复」保持可用，升级前也可以先手动导出一份。
+  - 发布流水线：新增 `.github/workflows/release.yml` —— 推 `v*` 标签（或手动触发）时用 Gradle 8.13 + JDK 21 构建 release APK，用 secrets 还原签名库并签名，`apksigner verify` 确认不是 debug 签名，计算 SHA-256 与体积，生成 `update.json`（versionCode / versionName / apk / sha256 / size / notes），再 `gh release create` 建 Release 并上传 APK 与 update.json（versionName 含 rc / beta / alpha 时自动标 prerelease）。**需要自行配置的仓库 secrets**：`SIGNING_KEY_BASE64`（release keystore 的 base64）、`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`；本仓库目前尚未配置这些 secrets，因此流水线还没有跑过（如实标注）。
+  - 版本号同步：`app/build.gradle.kts` versionCode 7 / versionName `1.0.6-rc1`，`ui/SettingsScreens.kt` 的 `APP_VERSION = "1.0.6 rc1"` 与关于页「（versionCode 7）」。
+
 ### 已实现但**未在真机验证**（如实标注）
 - 真实外部 AI API 的连接、权限门控与工具调用：本机已配置服务（deepseek-chat）并实测了聊天查询与「AI 自学习」建规则；仍**未**在真机触发的是「我的页长按 3 秒让 AI 评本月账单」的最终一次调用（为避免产生真实付费调用），以及与外部 AI 相关的语音/图片/PDF 识别、云同步工具调用
 - 云同步与真实服务端的推送/冲突/多端隔离（无可用服务端，仅验证适配层、请求体构造与待同步队列）
@@ -182,6 +198,10 @@ $env:ANDROID_HOME='D:\SDK'; $env:ANDROID_SDK_ROOT='D:\SDK'
 - 语音识别、图片/截图识别、扫描型 PDF 的 OCR 路径（未接具备相应能力的模型）
 - Windows 网页端（本期仅预留同一数据结构与云同步适配层，未实现）
 - 我的页桑多涅「长按 3 秒 → AI 评价与建议」的**最终评价文本生成与「一天最多一次」限制**：进度环（长按约 2.4 秒环绕整个面板）已实测，但本机已配置真实 API，为避免产生真实付费调用未让长按走完 3 秒；已存文本回放、失败回退与同日拦截走同一段代码，未在屏幕上确认
+
+- 通知自动记账只在**本机注入的虚构通知**（debug 包「注入测试通知」）上跑通了完整链路：真实银行 App / 支付宝 / 微信支付的通知格式与措辞差异、真实到账通知的延迟与批量投递、ColorOS 后台限制下监听服务被回收后的恢复、以及「自动记账」模式下的真正无人值守入账，均未在真实支付场景验证
+- 通知里「账户间转账 / 信用卡还款 / 提现充值」在真实语料上的判定准确率未验证（规则与用例已写，语料为虚构）
+- GitHub Actions 发布流水线未实际运行（仓库 secrets 未配置）；应用内「立即更新 → 下载 → SHA-256 与签名校验 → 系统安装」整条链路也未执行过——当前 Release v1.0.5-rc1 不含 `update.json`，「检查更新」只走到了「已跳过本次更新」这条失败安全分支
 
 ### 已知限制
 - 导入的单行「已全额退款」记录会保留为支出并计入统计；要抵减需在详情页用「记录退款」生成退款事件（退款按净额展示）
@@ -217,5 +237,7 @@ $env:ANDROID_HOME='D:\SDK'; $env:ANDROID_SDK_ROOT='D:\SDK'
 第十轮 11 项整改已逐项真机确认（debug 包 `com.xzledger.app.debug` + release 包 `com.xzledger.app`，1.0.4 rc1 / versionCode 5）：明细页 2026年10月 显示 收入 904.40 / 支出 2,689.86 / **结余 714.54**（= 本月预算 2,500.00 + 收入 904.40 − 支出净 2,689.86），说明文案同步改为「结余 = 本月预算 ¥2,500.00 + 收入 - 支出（净）……与账户余额口径不同」；桑多涅台词由旧算法的「108%」（只看支出）变为 **71%**（(2,689.86 − 904.40) / 2,500 = 71.4%），并随收入抵消支出、最低按 0 计；我的页第一组为「周期管理」（预算设置 / 月度统计 / 周期记账与订阅提醒），「记账提醒」已移入下方「数据管理」；AI 聊天页 AI 气泡整段多行完整显示（不再 3 行截断），右上 `⋮` 弹出「AI 权限管理 / 清空聊天记录」两项；记账页收入 tab 不再出现「长期消费 / 即时消费」与「退款」胶囊，历史胶囊换成收入商户「闲鱼 / 京东 / 滴滴 红包 / 肯德基 红包」，支出 tab 则是「兰州大学 餐饮 / 平账 误差平账 / 淘宝 网购」；转账 tab 只留金额、日期、账户与商户备注；支出 tab 分类行首为「退款」→ 进入「选择退款账单」（搜索 + 仅支出列表 + 已退/剩余可退提示）→ 选「兰州大学 ¥14.00」后自动回到记账页并预填 金额 14.00 / 商户 兰州大学 / 分类 餐饮 / 即时消费，同时显示「退款对象：兰州大学（2026-10-31）」。该笔退款**未保存**，明细页与已有账单内容没有任何改动（本轮「不改动已记录账单」的要求）；历史胶囊「闲鱼」点选后显示「依据你的规则：AI 学习 · 闲鱼」（AI 自学习规则实际生效），再点一次同一胶囊即取消选择、商户被清空；我的页桑多涅面板右侧出现「？」与「长按 3 秒，让在下看一次本月账单。」；长按约 2.4 秒的中间帧抓到了沿整个面板轮廓生长的金色环形进度，松手即取消。本机已配置真实 AI 接口，为避免产生真实付费调用，未让长按走完 3 秒触发最终评价，该项如实列在「未在真机验证」里。
 
 第十一轮 10 项整改已逐项真机确认（debug 包 `com.xzledger.app.debug`，1.0.5 rc1 / versionCode 6；release 包同版本编译通过）：桌面 4x2「今日概览」不再显示「载入窗口小部件时出现问题」，logcat 打出 `I XZWidget: selfCheck ok id=43`，卡片正常渲染「猫猫记账 11月1日 星期日 / 今日支出 ¥0.00 / 今日收入 ¥0.00 / 结余 ¥0.00 / 未设置预算」（根因是 RemoteViews 白名单不允许裸 `<View>`，见上节第 1 条）；预算「已用」按 支出 − 收入 生效——用临时数据（11 月支出 300.00、收入 100.00、月预算 500.00）实测预算页显示「已用 200.00 / 预算 500.00 40%」，明细页同步显示 收入 100.00 / 支出 300.00 / 结余 300.00（= 预算 500 + 100 − 300），桑多涅台词为「本月已经花掉 40% 的预算」；「每月自动沿用」开关打开后副标题变为「其它月份未单独设置时沿用 ¥500.00」，翻到 2026年12月 显示「沿用每月默认 / 已用 0.00 / 预算 500.00」、明细页 12 月结余 500.00（= 模板预算 + 0 − 0），证明模板对所有月份生效；我的页第一组已改名「数据统计」，顺序为 月度统计 → 预算设置 → 周期记账与订阅提醒，统计三格随月份更新为「2026年11月 支出 ¥300.00 / 本月笔数 2 / 本月结余 ¥300.00」；明细页点左上角桑多涅头像从 2026年12月 一键回到 2026年11月；月度统计页可左右滑动平滑切月（11月 → 10月，实测 10 月显示 收入 904.40 / 支出（毛额）2,929.86 / 退款 0.00 / 净支出 2,929.86 / 月度结余 −2,025.46 / 共 124 笔，分类分布 网购 1,581.77、餐饮 930.48、交通T 179.21），切月有 1/3 屏横向滑入 + 淡入过渡；我的页桑多涅面板右侧「？」已改为线条图标并居中；个性化设置新增「Apple 液态玻璃（WWDC 2025）」开关，与「液态玻璃效果（ColorOS 17）」同时打开后卡片圆角更大、阴影更柔、描边更亮（如实说明：Compose 无法对兄弟节点做真实高斯模糊，仍是分层模拟，暗色下差异属细微）。测试用的 11 月两笔账单与模板预算已在验收后从 debug 包数据库删除（验收后复核：11 月回到 0.00、预算回到「未设置」），release 包与真实账单内容未被改动。GitHub 仓库 `https://github.com/XiaozhuangXzsg/XZ-Ledger` 已发布，应用内「给项目 Star / 分享应用 / 配置 GitHub 地址 / 配置下载地址」默认指向该仓库与 `releases/latest`。
+
+第十二轮（通知自动记账 + 应用内更新）已真机确认（debug 包 `com.xzledger.app.debug`，1.0.6 rc1 / versionCode 7）：「我的 → 智能记账 → 通知自动记账」页面正常渲染，用 `adb shell cmd notification allow_listener` 授权后显示「通知使用权：已授予 / 系统监听服务：已连接」；监听应用列表在修好包可见性后正确列出本机已安装的 中国农业银行（com.android.bankabc）/ 中国银行（com.chinamworld.bocmbci）/ 微信（com.tencent.mm）/ 招商银行（cmb.pb）/ 支付宝（com.eg.android.AlipayGphone），此前只剩 Claude / Google / Play 商店、搜索「Alipay」返回「没有匹配的应用」；勾选支付宝后点 debug 专属「注入测试通知」，待确认里出现「消费支出 置信度 80% / 星巴克 / 支付宝 / −35.80 / 2026-11-01 12:30 · 尾号 1234 · 账户 支付宝」，点「确认入账」提示「已入账」、待确认清零，明细页立即多出「星巴克 −35.80（支付宝）」，支出 18.00 → 53.80、结余 2,482.00 → 2,446.20（未重启）；账单详情显示 账单来源 notify、来源平台 com.eg.android.AlipayGphone、去重标识 `notify|f|com.eg.android.AlipayGphone|expense|3580|29891790|星巴克` 与记录编号；同一条通知再注入一次时待确认仍只有 1 笔、「自动记账记录」显示「重复已跳过 / 已在待确认列表，跳过」，去重生效；带日期的卡片原先显示「2026-11-01 11-01 12:30」，改用 `HH:mm` 后显示「2026-11-01 12:30」。测试数据已全部清理（账单删除 → 回收站「彻底删除」、待确认「全部忽略」→「没有待确认账单」），复核明细页回到 收入 0.00 / 支出 18.00 / 结余 2,482.00（三笔兰州大学），回收站只剩用户原有的 3 条。`gradle :app:testDebugUnitTest` 24 个解析 / 去重用例全通过。「我的 → 更多 → 检查更新」弹出「已是最新版本」并正确说明「本地数据不会被清除；更新只是覆盖安装同一个应用。」「最新 Release（v1.0.5-rc1）缺少 update.json，无法核对 versionCode 与 SHA-256，已跳过本次更新」；关于页显示「版本 1.0.6 rc1（versionCode 7）」，GitHub 地址与分享链接仍指向 `XiaozhuangXzsg/XZ-Ledger` 与 `releases/latest`。真实银行 / 支付通知、CI 发布流水线与下载安装链路如实列在上节「未在真机验证」。
 
 未验证项见上节「已实现但未在真机验证」。

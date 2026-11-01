@@ -39,8 +39,10 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LibraryBooks
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RestoreFromTrash
 import androidx.compose.material.icons.outlined.Rule
 import androidx.compose.material.icons.outlined.Savings
@@ -72,11 +74,14 @@ import com.xzledger.app.AppState
 import com.xzledger.app.XzApp
 import com.xzledger.app.data.AppLinks
 import com.xzledger.app.data.SettingsKeys
+import com.xzledger.app.data.pendingCount
+import com.xzledger.app.autorecord.NotifyPrefs
 import com.xzledger.app.data.monthBalance
 import com.xzledger.app.data.monthBudgetTotal
 import com.xzledger.app.data.monthSummary
 import com.xzledger.app.util.Attachments
 import com.xzledger.app.util.Dates
+import com.xzledger.app.update.Updater
 import com.xzledger.app.util.Money
 
 private val M_BLUE = Color(0xFF74B9FF)
@@ -211,6 +216,14 @@ fun MineScreen(state: AppState, nav: NavStack) {
             IconMenuRow(Icons.Outlined.SmartToy, M_TEAL, "AI 聊天记账", "用一句话记账、查询与统计") { nav.push(Screen.AI_CHAT) }
             IconMenuRow(Icons.Outlined.AutoAwesome, M_PURPLE, "AI API 配置", "服务名称、接口地址、API Key、模型") { nav.push(Screen.AI_CONFIG) }
             IconMenuRow(Icons.Outlined.Lock, M_BLUE, "AI 权限管理", "读账本与新增账单分别授权") { nav.push(Screen.AI_PERM) }
+            val notifyOn = store.bool(SettingsKeys.NOTIFY_ENABLED, false)
+            val notifyPending = remember(state.dataVersion) { db.pendingCount(state.ledgerId) }
+            IconMenuRow(
+                Icons.Outlined.NotificationsActive, M_AMBER, "通知自动记账",
+                if (!notifyOn) "未开启；开启后自动识别银行与支付通知"
+                else (if (NotifyPrefs.mode(store) == NotifyPrefs.MODE_AUTO) "自动记账" else "待确认") +
+                    (if (notifyPending > 0) "　有 " + notifyPending + " 笔待确认" else "　暂无待确认")
+            ) { nav.push(Screen.NOTIFY_AUTO) }
             IconMenuRow(Icons.Outlined.Rule, M_AMBER, "个人分类规则", "商户 / 关键词 / 账户 / 方向 / 来源") { nav.push(Screen.RULES) }
             IconMenuRow(Icons.Outlined.MenuBook, M_GREEN, "学习记录", "历史修改与建议规则") { nav.push(Screen.LEARNING) }
         }
@@ -235,6 +248,10 @@ fun MineScreen(state: AppState, nav: NavStack) {
         MineGroup("更多") {
             IconMenuRow(Icons.Outlined.BarChart, M_BLUE, "年度账单", "年收支、分类分布、长期与即时占比") { nav.push(Screen.ANNUAL) }
             IconMenuRow(Icons.Outlined.Info, M_GRAY, "关于", "版本 " + APP_VERSION + "、开发者与反馈") { nav.push(Screen.ABOUT) }
+            IconMenuRow(
+                Icons.Outlined.Refresh, M_GREEN, "检查更新",
+                "当前 " + APP_VERSION + "；从 GitHub 正式 Release 检查新版本"
+            ) { Updater.check(ctx, store, manual = true) }
             IconMenuRow(Icons.Outlined.StarBorder, M_GOLD, "给项目 Star", "打开 XZ-Ledger 仓库，不会替你点 Star") {
                 val url = store.str(SettingsKeys.GITHUB_URL, AppLinks.GITHUB)
                 if (url.isEmpty()) hint = "尚未配置 GitHub 地址，请到「关于」中填写后再打开"

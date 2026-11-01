@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">猫猫记账</string>
+    <string name="notify_service_label">猫猫记账 · 通知自动记账</string>
 </resources>
