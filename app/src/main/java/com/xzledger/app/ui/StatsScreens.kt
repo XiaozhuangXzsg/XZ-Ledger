@@ -206,15 +206,17 @@ private fun MonthStats(state: AppState, month: String) {
             }
             item {
                 GlassPanel(contentPadding = PaddingValues(16.dp)) {
-                    Text("消费性质（长期／即时）", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("消费性质（长期／即时／周期）", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     val maxN = byNature.values.maxOrNull() ?: 0L
                     val permanent = byNature[Nature.PERMANENT.id] ?: 0L
                     val instant = byNature[Nature.INSTANT.id] ?: 0L
+                    val periodic = byNature[Nature.PERIODIC.id] ?: 0L
                     val unknown = byNature["unknown"] ?: 0L
-                    val totalN = permanent + instant + unknown
-                    BarRow(Nature.PERMANENT.label + "（永久／半永久）", permanent, maxN, MaterialTheme.colorScheme.primary,
-                        if (totalN > 0) Money.centsToPlain(permanent) + " · " + (permanent * 100 / totalN) + "%" else null)
-                    BarRow(Nature.INSTANT.label + "（即时／临时）", instant, maxN, expenseColor(), null)
+                    val totalN = permanent + instant + periodic + unknown
+                    fun pct(v: Long) = if (totalN > 0) Money.centsToPlain(v) + " · " + (v * 100 / totalN) + "%" else null
+                    BarRow(Nature.PERMANENT.label + "（永久／半永久）", permanent, maxN, MaterialTheme.colorScheme.primary, pct(permanent))
+                    BarRow(Nature.INSTANT.label + "（即时／临时）", instant, maxN, expenseColor(), pct(instant))
+                    BarRow(Nature.PERIODIC.label + "（按月／周期）", periodic, maxN, MaterialTheme.colorScheme.tertiary, pct(periodic))
                     if (unknown > 0) BarRow("未标注性质", unknown, maxN, MaterialTheme.colorScheme.outline)
                 }
             }
@@ -331,13 +333,14 @@ fun AnnualScreen(state: AppState, nav: NavStack) {
                     Text("消费性质占比", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     val permanent = byNature[Nature.PERMANENT.id] ?: 0L
                     val instant = byNature[Nature.INSTANT.id] ?: 0L
+                    val periodic = byNature[Nature.PERIODIC.id] ?: 0L
                     val unknown = byNature["unknown"] ?: 0L
-                    val totalN = permanent + instant + unknown
-                    val maxN = maxOf(permanent, instant, unknown)
-                    BarRow(Nature.PERMANENT.label, permanent, maxN, MaterialTheme.colorScheme.primary,
-                        if (totalN > 0) Money.centsToPlain(permanent) + " · " + (permanent * 100 / totalN) + "%" else null)
-                    BarRow(Nature.INSTANT.label, instant, maxN, expenseColor(),
-                        if (totalN > 0) Money.centsToPlain(instant) + " · " + (instant * 100 / totalN) + "%" else null)
+                    val totalN = permanent + instant + periodic + unknown
+                    val maxN = maxOf(permanent, instant, periodic, unknown)
+                    fun pct(v: Long) = if (totalN > 0) Money.centsToPlain(v) + " · " + (v * 100 / totalN) + "%" else null
+                    BarRow(Nature.PERMANENT.label, permanent, maxN, MaterialTheme.colorScheme.primary, pct(permanent))
+                    BarRow(Nature.INSTANT.label, instant, maxN, expenseColor(), pct(instant))
+                    BarRow(Nature.PERIODIC.label, periodic, maxN, MaterialTheme.colorScheme.tertiary, pct(periodic))
                     if (unknown > 0) BarRow("未标注", unknown, maxN, MaterialTheme.colorScheme.outline)
                 }
             }

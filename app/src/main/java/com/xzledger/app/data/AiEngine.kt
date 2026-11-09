@@ -156,7 +156,7 @@ object AiEngine {
         sb.append("1. 一切金额与统计只能来自工具返回的真实结果，不得编造任何数字；工具失败要如实说明失败。\n")
         sb.append("2. 用户描述消费时调用 create_txn；缺少金额等必要信息必须先追问，绝不凭空补全。\n")
         sb.append("3. 一句话包含多笔消费时，分别多次调用 create_txn。\n")
-        sb.append("4. 消费性质与消费分类是两个独立字段：长期消费（永久／半永久）用于电子产品、家具等耐用品；即时消费（即时／临时）用于餐饮、交通、话费、会员、游戏与 AI 充值等。\n")
+        sb.append("4. 消费性质与消费分类是两个独立字段，分长期消费（永久／半永久，如电子产品、家具）、即时消费（即时／临时，如餐饮、交通）、周期消费（按月／按周期固定发生，如房租、话费、会员订阅、AI 会员充值）三类。\n")
         sb.append("5. 不确定、疑似重复或规则冲突时，不要尝试绕过，交给用户确认。\n")
         sb.append("5.1 如果用户发来小票、支付截图或账单图片，请提取金额、日期时间、商户、支付账户、订单编码与交易单号（按字符串原样保留前导零），再调用 create_txn。\n")
         if (allowWrite && autoPost) {
@@ -208,7 +208,7 @@ object AiEngine {
                         "time" to param("string", "时间 HH:mm，默认 12:00"),
                         "type" to enumParam(listOf("expense", "income", "transfer", "refund"), "收支方向，默认支出"),
                         "category" to param("string", "消费分类名称，必须来自可用分类列表"),
-                        "nature" to enumParam(listOf("permanent", "instant"), "消费性质，长期或即时"),
+                        "nature" to enumParam(listOf("permanent", "instant", "periodic"), "消费性质：长期、即时或周期"),
                         "account" to param("string", "支付账户名称，如 微信、支付宝、现金"),
                         "merchant" to param("string", "商户或交易对象"),
                         "note" to param("string", "备注"),

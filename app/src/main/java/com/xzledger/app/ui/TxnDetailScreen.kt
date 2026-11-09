@@ -369,16 +369,10 @@ fun TxnEditScreen(state: AppState, nav: NavStack, id: String) {
                         Spacer(Modifier.height(10.dp))
                         Text("消费性质（收入可不填）", style = MaterialTheme.typography.labelMedium)
                         Spacer(Modifier.height(6.dp))
-                        Row {
-                            ChipButton("未填写", nature == null, Modifier.weight(1f), onClick = { nature = null })
-                            Spacer(Modifier.width(6.dp))
-                            ChipButton(Nature.PERMANENT.label, nature == Nature.PERMANENT, Modifier.weight(1f), onClick = { nature = Nature.PERMANENT })
-                            Spacer(Modifier.width(6.dp))
-                            ChipButton(Nature.INSTANT.label, nature == Nature.INSTANT, Modifier.weight(1f), onClick = { nature = Nature.INSTANT })
-                        }
+                        NatureChoiceRow(nature = nature, noneLabel = "未填写") { nature = it }
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "长期消费＝永久／半永久消费；即时消费＝即时／临时消费。两者与分类是独立字段。",
+                            "长期消费＝永久／半永久消费；即时消费＝即时／临时消费；周期消费＝按月／按周期固定发生（房租、话费、会员）。性质与分类是独立字段。",
                             style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

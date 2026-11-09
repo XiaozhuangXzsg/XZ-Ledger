@@ -3,7 +3,7 @@
 面向大学生的安卓个人记账应用。**本地优先、离线可用、真实数据与真实业务逻辑**，不含静态页面、不伪造成功提示。
 优先适配 ColorOS 16（实测机型：一加 PLK110 / Android 16 / SDK 36），兼容其他 Android（minSdk 26）。
 
-当前版本 **1.0.6 rc1**（`versionCode = 7`；改版本时需同步 `app/build.gradle.kts` 的 `versionName`/`versionCode` 与 `ui/SettingsScreens.kt` 的 `APP_VERSION`）。
+当前版本 **1.0.7 rc1**（`versionCode = 8`；改版本时需同步 `app/build.gradle.kts` 的 `versionName`/`versionCode` 与 `ui/SettingsScreens.kt` 的 `APP_VERSION`）。
 
 应用显示名为 **猫猫记账**（`strings.xml` 的 `app_name`、通知、分享文案、默认备份/导出文件名 `catledger-backup.json` / `catledger-txns.csv`），应用内已不再出现旧名；Kotlin 包名与 `applicationId` 仍为 `com.xzledger.app`（改包名会让已安装用户的数据不兼容，故保留），备份文件内的 `format` 常量仍为 `xzledger-backup` 以兼容旧备份，另含一次性配色迁移（旧 `indigo` → `sandrone`）。
 
@@ -192,6 +192,18 @@ $env:ANDROID_HOME='D:\SDK'; $env:ANDROID_SDK_ROOT='D:\SDK'
   - 发布流水线：新增 `.github/workflows/release.yml` —— 推 `v*` 标签（或手动触发）时用 Gradle 8.13 + JDK 21 构建 release APK，用 secrets 还原签名库并签名，`apksigner verify` 确认不是 debug 签名，计算 SHA-256 与体积，生成 `update.json`（versionCode / versionName / apk / sha256 / size / notes），再 `gh release create` 建 Release 并上传 APK 与 update.json（versionName 含 rc / beta / alpha 时自动标 prerelease）。**需要自行配置的仓库 secrets**：`SIGNING_KEY_BASE64`（release keystore 的 base64）、`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`；本仓库目前尚未配置这些 secrets，因此流水线还没有跑过（如实标注）。
   - 版本号同步：`app/build.gradle.kts` versionCode 7 / versionName `1.0.6-rc1`，`ui/SettingsScreens.kt` 的 `APP_VERSION = "1.0.6 rc1"` 与关于页「（versionCode 7）」。
 
+- 第十三轮 消费性质新增「周期消费」+ 明细长按某天补记（1.0.7 rc1 / versionCode 8）：
+  - 第三种性质：`data/Models.kt` 的 `enum class Nature` 增加 `PERIODIC("periodic", "周期消费", "按月／按周期固定发生")`，与长期（永久／半永久）、即时（即时／临时）并列。性质在库里一直是按 id 字符串存（`txn.nature`、`category.nature_default`、`rule.set_nature`、`autorecord.nature`、学习记录的旧／新性质），所以**不需要数据库迁移**，旧账单仍按原 id 读取，未填性质的仍是空值（统计里的「未标注性质」）。
+  - 选择器统一：`ui/Common.kt` 新增 `NatureChoiceRow`（`FlowRow` 自动换行——三个 4 字胶囊在 363dp 窄屏上并排会被挤成两行字，所以不再用 `Row` + `weight(1f)`；可带「不设置 / 未填 / 未填写」表示清空）。替换了记账页性质行、账单详情编辑态、分类管理（拆分分类行 + 「默认性质」对话框）、个人分类规则、周期记账规则共 6 处原来写死两选一的胶囊行。
+  - 徽标配色：`NatureBadge` 长期=tertiary、即时=secondary、周期=primary（金色，和预算环形同色系），明细行一眼能分出三类。
+  - 统计口径：月度统计「消费性质（长期／即时／周期）」与年度账单「消费性质占比」都补了周期一栏，百分比按长期 + 即时 + 周期 + 未标注的合计计算，三栏各自都显示金额与占比。
+  - 自动分类与种子数据：`data/Heuristic.kt` 的 `通讯`（话费 / 流量 / 套餐 / 宽带 / 充话费）与 `会员`（会员 / 订阅 / 充值 / VIP / AI）提示词由即时改为周期；新建账本时的种子分类 `话费`、`会员订阅`、`AI会员充值`、`房租` 默认周期消费。已存在账本的分类默认值不会被改写（自建分类的旧默认值保持原样，可在「分类管理」里手动改）。
+  - AI 与导入：`data/AiEngine.kt` 的 `create_txn` 工具参数 `nature` 枚举变为 `permanent|instant|periodic`，系统提示词补上「周期消费（房租 / 话费 / 会员订阅 / AI 会员充值）」；`data/AiImport.kt` 的导入 JSON 格式说明同步；导入页的「批量应用消费性质」与单行性质选择都由 `Nature.entries` 生成，不再写死两项。
+  - 明细页长按补记：`ui/DetailScreen.kt` 里每一天的日期行加了 `combinedClickable`——单击行为不变（仍由行内点开账单详情、左滑删除也不受影响，日期行的空点按不触发任何跳转），长按弹出 `ConfirmDialog`「在今天补记一笔？」/「在10月31日 周五补记一笔？」，文案说明「日期会设为 yyyy-MM-dd，只对这一笔记账生效；保存后日期自动回到今天」。确认后走日历页「某天记一笔」的同一通道（`state.presetDate` + `state.pendingTab = 1`），切到记账 tab。
+  - 一次性语义：`ui/EntryScreen.kt` 新增 `presetApplied` 标记，进入补记时日期胶囊显示「今天 · 补记」并在其下方显示提示行「补记：这一次记到 2026-11-01，保存后日期自动回到今天」；保存成功后自动把日期重置为今天并清掉标记，后续记账恢复正常日期（保存失败或中途离开不改日期；手动改日期也不会把补记状态带给下一笔）。
+  - 明细页顶部说明补一句「长按某一天的日期可在当天补记一笔。」
+  - 版本号同步：`app/build.gradle.kts` versionCode 8 / versionName `1.0.7-rc1`，`ui/SettingsScreens.kt` 的 `APP_VERSION = "1.0.7 rc1"` 与关于页「（versionCode 8）」。第十二轮验收时那个**临时** `v1.0.7-rc1`（versionCode 8）是只为跑通更新链路而发的构建，Release 与标签都已删除，本轮正式版本沿用同一 versionCode 8。
+
 ### 已实现但**未在真机验证**（如实标注）
 - 真实外部 AI API 的连接、权限门控与工具调用：本机已配置服务（deepseek-chat）并实测了聊天查询与「AI 自学习」建规则；仍**未**在真机触发的是「我的页长按 3 秒让 AI 评本月账单」的最终一次调用（为避免产生真实付费调用），以及与外部 AI 相关的语音/图片/PDF 识别、云同步工具调用
 - 云同步与真实服务端的推送/冲突/多端隔离（无可用服务端，仅验证适配层、请求体构造与待同步队列）
@@ -209,6 +221,7 @@ $env:ANDROID_HOME='D:\SDK'; $env:ANDROID_SDK_ROOT='D:\SDK'
 - 退款以「独立退款账单」记录（`refundOf` 关联原账单），原账单内容不会被修改；单笔退款金额不得超过原账单金额，同一账单可分多次退款，明细里以净额（支出 − 退款）统计
 - 年月滚轮以滑动选择；点击非当前项不会直接跳转（仅滑动 + 确定）
 - 周期提醒受系统省电策略影响，极端后台限制下可能延迟
+- 「周期消费」目前只是性质标签，与「周期记账与订阅提醒」是两套独立功能：把某笔账单标成周期消费**不会**自动生成周期规则，自动生成账单仍要在「周期记账与订阅提醒」里单独建规则
 
 ---
 
@@ -242,5 +255,7 @@ $env:ANDROID_HOME='D:\SDK'; $env:ANDROID_SDK_ROOT='D:\SDK'
 第十二轮（通知自动记账 + 应用内更新）已真机确认（debug 包 `com.xzledger.app.debug`，1.0.6 rc1 / versionCode 7）：「我的 → 智能记账 → 通知自动记账」页面正常渲染，用 `adb shell cmd notification allow_listener` 授权后显示「通知使用权：已授予 / 系统监听服务：已连接」；监听应用列表在修好包可见性后正确列出本机已安装的 中国农业银行（com.android.bankabc）/ 中国银行（com.chinamworld.bocmbci）/ 微信（com.tencent.mm）/ 招商银行（cmb.pb）/ 支付宝（com.eg.android.AlipayGphone），此前只剩 Claude / Google / Play 商店、搜索「Alipay」返回「没有匹配的应用」；勾选支付宝后点 debug 专属「注入测试通知」，待确认里出现「消费支出 置信度 80% / 星巴克 / 支付宝 / −35.80 / 2026-11-01 12:30 · 尾号 1234 · 账户 支付宝」，点「确认入账」提示「已入账」、待确认清零，明细页立即多出「星巴克 −35.80（支付宝）」，支出 18.00 → 53.80、结余 2,482.00 → 2,446.20（未重启）；账单详情显示 账单来源 notify、来源平台 com.eg.android.AlipayGphone、去重标识 `notify|f|com.eg.android.AlipayGphone|expense|3580|29891790|星巴克` 与记录编号；同一条通知再注入一次时待确认仍只有 1 笔、「自动记账记录」显示「重复已跳过 / 已在待确认列表，跳过」，去重生效；带日期的卡片原先显示「2026-11-01 11-01 12:30」，改用 `HH:mm` 后显示「2026-11-01 12:30」。测试数据已全部清理（账单删除 → 回收站「彻底删除」、待确认「全部忽略」→「没有待确认账单」），复核明细页回到 收入 0.00 / 支出 18.00 / 结余 2,482.00（三笔兰州大学），回收站只剩用户原有的 3 条。`gradle :app:testDebugUnitTest` 24 个解析 / 去重用例全通过。「我的 → 更多 → 检查更新」弹出「已是最新版本」并正确说明「本地数据不会被清除；更新只是覆盖安装同一个应用。」「最新 Release（v1.0.5-rc1）缺少 update.json，无法核对 versionCode 与 SHA-256，已跳过本次更新」；关于页显示「版本 1.0.6 rc1（versionCode 7）」，GitHub 地址与分享链接仍指向 `XiaozhuangXzsg/XZ-Ledger` 与 `releases/latest`。
 
 第十二轮的应用内更新链路随后用**临时 Release** 完整跑通（release 包 `com.xzledger.app`）：发布 v1.0.6-rc1（versionCode 7，含 update.json）后再发一个临时的 v1.0.7-rc1（versionCode 8）并设为 latest；设备上「检查更新」弹出「发现新版本 / 当前版本 1.0.6-rc1（7）/ 最新版本 1.0.7-rc1（8）/ 安装包 13.1 MB / 更新内容」，点「立即更新」进入「正在下载安装包 10%」，约 20 秒后自动比对并显示「可以安装 / SHA-256、包名、版本号与签名均已校验通过」，点「立即安装」由系统安装器接管（先把「安装未知应用」开关打开、返回再点一次），系统确认页显示「版本号 1.0.7-rc1 | 13.1 MB 来自猫猫记账」并「安装完成」，dumpsys package 显示 versionCode 8 / versionName 1.0.7-rc1，App 重启后账本与设置原样保留。为此补上了 `REQUEST_INSTALL_PACKAGES` 权限——缺它时 ColorOS 的「安装未知应用」开关是灰的、点不动（这正是本轮真机测出来的问题）。测试用的 v1.0.7-rc1 Release 与标签已删除，latest 回到 v1.0.6-rc1（资产为补权限后重新构建的 APK，13,693,491 B）。真实银行 / 支付通知与 CI 流水线如实列在上节「未在真机验证」。
+
+第十三轮「消费性质新增周期消费 + 明细长按某天补记」已逐项真机确认（debug 包 `com.xzledger.app.debug`，1.0.7 rc1 / versionCode 8；release 包同版本编译通过）：在明细页长按「今天」的日期行弹出「在今天补记一笔？」，正文为「记账页的日期会设为 2026-11-09，只对这一笔记账生效；保存后日期自动回到今天，之后的新记账不受影响。」，长按「昨天」则显示「在昨天补记一笔？」与 2026-11-08（单击与左滑删除的行为未变）；点「去记一笔」切到记账 tab，性质行三枚胶囊「长期消费 / 即时消费 / 周期消费」同排显示、日期胶囊变为「昨天 · 补记」，下方出现提示行「补记：这一次记到 2026-11-08，保存后日期自动回到今天」。按「周期消费 + 餐饮 + 1.00」保存后提示「已保存到「默认账本」」，日期胶囊立即回到「今天」、提示行消失（一次性语义生效，不影响下一笔），明细「昨天」下多出「餐饮 · 周期消费（金色徽标）· 现金 −1.00」，月度支出 458.51 → 459.51、昨天小计 39.90 → 40.90；月度统计的「消费性质（长期／即时／周期）」三行齐全——长期消费 87.25 · 18%、即时消费 369.26 · 80%、周期消费 1.00 · 0%（另有未标注性质 2.00），说明新性质已进入统计口径；分类管理「编辑分类」对话框的「默认消费性质」是四枚胶囊（不设置 / 长期消费 / 即时消费 / 周期消费，窄屏自动换到第二行）；关于页显示「版本 1.0.7 rc1（versionCode 8）」。顺带记录一个既有交互（本轮未改动）：商户留空、自动分类未命中时直接点保存会提示「请选择消费分类」，先点一个分类即可保存。测试账单已删除并「彻底删除」，复核明细回到 支出 458.51 / 昨天 39.90 / 共 39 笔，用户原有账单未被改动。
 
 未验证项见上节「已实现但未在真机验证」。

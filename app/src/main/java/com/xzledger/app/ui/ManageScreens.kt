@@ -221,13 +221,7 @@ fun SplitScreen(state: AppState, nav: NavStack, id: String) {
                     }
                     Spacer(Modifier.height(6.dp))
                     Text("消费性质", style = MaterialTheme.typography.labelMedium)
-                    Row {
-                        ChipButton("未填", nature == null, Modifier.weight(1f), onClick = { nature = null })
-                        Spacer(Modifier.width(6.dp))
-                        ChipButton(Nature.PERMANENT.label, nature == Nature.PERMANENT, Modifier.weight(1f), onClick = { nature = Nature.PERMANENT })
-                        Spacer(Modifier.width(6.dp))
-                        ChipButton(Nature.INSTANT.label, nature == Nature.INSTANT, Modifier.weight(1f), onClick = { nature = Nature.INSTANT })
-                    }
+                    NatureChoiceRow(nature = nature, noneLabel = "未填") { nature = it }
                     Spacer(Modifier.height(8.dp))
                     if (editingIndex > 0) {
                         TextButton({
@@ -355,13 +349,7 @@ private fun CategoryEditDialog(ledgerId: String, kind: String, initial: Category
                 OutlinedTextField(value = icon, onValueChange = { icon = it }, label = { Text("图标（emoji 或字符）") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))
                 Text("默认消费性质（选填；收入分类通常不填）", style = MaterialTheme.typography.labelMedium)
-                Row {
-                    ChipButton("不设置", nature == null, Modifier.weight(1f), onClick = { nature = null })
-                    Spacer(Modifier.width(6.dp))
-                    ChipButton(Nature.PERMANENT.label, nature == Nature.PERMANENT, Modifier.weight(1f), onClick = { nature = Nature.PERMANENT })
-                    Spacer(Modifier.width(6.dp))
-                    ChipButton(Nature.INSTANT.label, nature == Nature.INSTANT, Modifier.weight(1f), onClick = { nature = Nature.INSTANT })
-                }
+                NatureChoiceRow(nature = nature, noneLabel = "不设置") { nature = it }
             }
         },
         confirmButton = {

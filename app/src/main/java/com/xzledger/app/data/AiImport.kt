@@ -27,7 +27,7 @@ object AiImport {
         "请把下面的账单内容整理成 JSON，格式为：\n" +
         "{\"rows\":[{\"amount_yuan\":199.00,\"date\":\"2026-02-14\",\"time\":\"12:30\"," +
         "\"direction\":\"expense|income|refund\",\"merchant\":\"\",\"product\":\"\",\"account\":\"\"," +
-        "\"trade_no\":\"\",\"order_no\":\"\",\"platform\":\"\",\"status\":\"\",\"nature\":\"permanent|instant|\"," +
+        "\"trade_no\":\"\",\"order_no\":\"\",\"platform\":\"\",\"status\":\"\",\"nature\":\"permanent|instant|periodic|\"," +
         "\"category\":\"餐饮|交通|网购|电子产品|生活用品|家具|娱乐|通讯|会员|学习|医疗|其他\"," +
         "\"note\":\"\",\"origin\":\"第几页/第几行\"}]}\n" +
         "账单内容如下：\n"

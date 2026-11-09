@@ -410,8 +410,8 @@ fun ImportPreviewScreen(state: AppState, nav: NavStack) {
         }, onDismiss = { catSheet = false })
     }
     if (natureSheet) {
-        val opts = listOf("长期消费（永久／半永久）" to Nature.PERMANENT, "即时消费（即时／临时）" to Nature.INSTANT)
-        ChoiceSheet("选择消费性质（批量应用）", opts.map { it.first to it.second }, onPick = { n ->
+        val opts = Nature.entries.map { it.label + "（" + it.desc + "）" to it }
+        ChoiceSheet("选择消费性质（批量应用）", opts, onPick = { n ->
             natureSheet = false
             val list = ImportFiles.applyToRows(rows.toList(), selectedKeys, null, n)
             rows.clear()
@@ -601,7 +601,7 @@ private fun RowEditDialog(
     if (natureSheet) {
         ChoiceSheet(
             "选择消费性质",
-            listOf("长期消费（永久／半永久）" to Nature.PERMANENT, "即时消费（即时／临时）" to Nature.INSTANT),
+            Nature.entries.map { it.label + "（" + it.desc + "）" to it },
             onPick = { nature = it; natureSheet = false },
             onDismiss = { natureSheet = false }
         )

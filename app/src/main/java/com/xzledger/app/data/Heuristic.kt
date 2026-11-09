@@ -34,8 +34,8 @@ object Heuristic {
         Triple("家具", "桌|椅|床|柜|沙发|书架|床垫|置物架|收纳柜", Nature.PERMANENT),
         Triple("生活用品", "纸巾|洗发|沐浴|牙膏|牙刷|洗衣|拖鞋|毛巾|日用|卫生纸|垃圾袋|水杯|雨伞", Nature.INSTANT),
         Triple("娱乐", "电影|游戏|KTV|门票|唱歌|演出|剧本|密室|桌游|网吧|视频会员|音乐会员", Nature.INSTANT),
-        Triple("通讯", "话费|流量|套餐|宽带|充话费", Nature.INSTANT),
-        Triple("会员", "会员|订阅|充值|VIP|vip|AI", Nature.INSTANT),
+        Triple("通讯", "话费|流量|套餐|宽带|充话费", Nature.PERIODIC),
+        Triple("会员", "会员|订阅|充值|VIP|vip|AI", Nature.PERIODIC),
         Triple("学习", "书|教材|课程|培训|文具|打印|考试|网课|四六级", Nature.INSTANT),
         Triple("医疗", "药|医院|挂号|看病|体检|牙", Nature.INSTANT),
     )

@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -510,11 +512,37 @@ fun MoneyText(cents: Long, type: TxnType, style: androidx.compose.ui.text.TextSt
 @Composable
 fun NatureBadge(nature: Nature?) {
     if (nature == null) return
-    val color = if (nature == Nature.PERMANENT) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
+    val color = when (nature) {
+        Nature.PERMANENT -> MaterialTheme.colorScheme.tertiary
+        Nature.PERIODIC -> MaterialTheme.colorScheme.primary
+        Nature.INSTANT -> MaterialTheme.colorScheme.secondary
+    }
     Box(
         Modifier.background(color.copy(alpha = 0.14f), RoundedCornerShape(6.dp))
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) { Text(nature.label, style = MaterialTheme.typography.labelSmall, color = color) }
+}
+
+/**
+ * 消费性质单选：长期／即时／周期三选一（可选带「不设置」）。
+ * 三项中文标签较长，用 FlowRow 自动换行，窄屏也不会被挤成两行字。
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun NatureChoiceRow(
+    nature: Nature?,
+    modifier: Modifier = Modifier,
+    noneLabel: String? = "不设置",
+    onChange: (Nature?) -> Unit
+) {
+    FlowRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        if (noneLabel != null) ChipButton(noneLabel, nature == null) { onChange(null) }
+        Nature.entries.forEach { n -> ChipButton(n.label, nature == n) { onChange(n) } }
+    }
 }
 
 @Composable

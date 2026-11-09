@@ -193,11 +193,7 @@ fun RecurringScreen(state: AppState, nav: NavStack) {
                     item { Spacer(Modifier.height(8.dp)) }
                     item {
                         Text("性质（可选）", style = MaterialTheme.typography.bodySmall)
-                        Row {
-                            ChipButton("即时消费", e.nature == Nature.INSTANT) { editing = e.copy(nature = Nature.INSTANT) }
-                            Spacer(Modifier.width(8.dp))
-                            ChipButton("长期消费", e.nature == Nature.PERMANENT) { editing = e.copy(nature = Nature.PERMANENT) }
-                        }
+                        NatureChoiceRow(nature = e.nature, noneLabel = "不设置") { editing = e.copy(nature = it) }
                     }
                     if (e.amount > 0L) {
                         item { Spacer(Modifier.height(8.dp)) }

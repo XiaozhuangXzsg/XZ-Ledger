@@ -271,7 +271,7 @@ fun AboutScreen(state: AppState, nav: NavStack) {
                 GlassPanel(contentPadding = PaddingValues(16.dp)) {
                     Text("猫猫记账", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(6.dp))
-                    Text("版本 " + APP_VERSION + "（versionCode 7）", style = MaterialTheme.typography.bodySmall)
+                    Text("版本 " + APP_VERSION + "（versionCode 8）", style = MaterialTheme.typography.bodySmall)
                     Text("面向大学生日常收支的本地优先记账应用，优先适配 ColorOS。", style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(10.dp))
                     Text("开发者", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -329,7 +329,7 @@ fun shareApp(ctx: android.content.Context, download: String) {
     }
 }
 
-const val APP_VERSION = "1.0.6 rc1"
+const val APP_VERSION = "1.0.7 rc1"
 
 private fun entityLabel(entity: String): String = when (entity) {
     "txn" -> "账单"; "category" -> "分类"; "account" -> "账户"; "ledger" -> "账本"

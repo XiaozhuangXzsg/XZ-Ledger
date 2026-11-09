@@ -260,11 +260,11 @@ class Db(context: Context) : SQLiteOpenHelper(context.applicationContext, NAME, 
             Pair("服饰", "👕") to "permanent",
             Pair("学习", "📚") to "permanent",
             Pair("医疗", "💊") to "instant",
-            Pair("话费", "📱") to "instant",
-            Pair("会员订阅", "🎫") to "instant",
+            Pair("话费", "📱") to "periodic",
+            Pair("会员订阅", "🎫") to "periodic",
             Pair("游戏充值", "🕹") to "instant",
-            Pair("AI会员充值", "🤖") to "instant",
-            Pair("房租", "🏠") to null,
+            Pair("AI会员充值", "🤖") to "periodic",
+            Pair("房租", "🏠") to "periodic",
             Pair("其他", "📌") to null
         )
         var order = 0

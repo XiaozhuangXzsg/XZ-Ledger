@@ -293,13 +293,7 @@ private fun RuleEditDialog(state: AppState, initial: Rule?, onDismiss: () -> Uni
                 }
                 Spacer(Modifier.height(8.dp))
                 Text("设为消费性质（可不设）", style = MaterialTheme.typography.labelMedium)
-                Row {
-                    ChipButton("不设置", nature == null, Modifier.weight(1f), onClick = { nature = null })
-                    Spacer(Modifier.width(6.dp))
-                    ChipButton(Nature.PERMANENT.label, nature == Nature.PERMANENT, Modifier.weight(1f), onClick = { nature = Nature.PERMANENT })
-                    Spacer(Modifier.width(6.dp))
-                    ChipButton(Nature.INSTANT.label, nature == Nature.INSTANT, Modifier.weight(1f), onClick = { nature = Nature.INSTANT })
-                }
+                NatureChoiceRow(nature = nature, noneLabel = "不设置") { nature = it }
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(value = priority, onValueChange = { priority = it.filter { ch -> ch.isDigit() } }, label = { Text("优先级（数字小的先匹配）") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 if (categoryId == null && nature == null) {

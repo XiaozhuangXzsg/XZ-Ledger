@@ -509,7 +509,7 @@ fun Db.categorySpending(ledgerId: String, month: String): Map<String, Long> {
     return map
 }
 
-/** 消费性质占比（长期／即时）。 */
+/** 消费性质占比（长期／即时／周期）。 */
 fun Db.natureSpending(ledgerId: String, start: String, end: String): Map<String, Long> {
     val map = HashMap<String, Long>()
     readableDatabase.rawQuery(

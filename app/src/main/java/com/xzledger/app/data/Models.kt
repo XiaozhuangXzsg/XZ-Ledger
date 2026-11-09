@@ -15,7 +15,8 @@ enum class TxnType(val id: String, val label: String) {
 /** 消费性质：与消费分类是两个独立字段。 */
 enum class Nature(val id: String, val label: String, val desc: String) {
     PERMANENT("permanent", "长期消费", "永久／半永久消费"),
-    INSTANT("instant", "即时消费", "即时／临时消费");
+    INSTANT("instant", "即时消费", "即时／临时消费"),
+    PERIODIC("periodic", "周期消费", "按月／按周期固定发生");
 
     companion object {
         fun of(id: String?): Nature? = entries.firstOrNull { it.id == id }

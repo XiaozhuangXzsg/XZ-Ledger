@@ -4,8 +4,10 @@ import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,7 +87,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DetailScreen(state: AppState, nav: NavStack) {
     val db = XzApp.db
@@ -113,6 +115,8 @@ fun DetailScreen(state: AppState, nav: NavStack) {
 
     var showMonthPicker by remember { mutableStateOf(false) }
     var showLedgerSheet by remember { mutableStateOf(false) }
+    // 长按某一天的日期行：询问是否在这一天补记一笔（只影响这一次记账，保存后回到今天）。
+    var addForDate by remember { mutableStateOf<String?>(null) }
     val anime = animeEnabled()
 
     Column(Modifier.fillMaxSize()) {
@@ -183,7 +187,7 @@ fun DetailScreen(state: AppState, nav: NavStack) {
                 Text(
                     "结余 = 本月预算" + (if (budgetTotal == null) "（未设置，按 0 计）" else " ¥" + Money.centsToPlain(budgetTotal)) +
                         " + 收入 - 支出（净）" + (if (summary.refund > 0) "；本月含退款 " + Money.centsToPlain(summary.refund) + "，已从支出中抵减" else "") +
-                        "，与账户余额口径不同。",
+                        "，与账户余额口径不同。长按某一天的日期可在当天补记一笔。",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -225,7 +229,7 @@ fun DetailScreen(state: AppState, nav: NavStack) {
                         GlassPanel(Modifier.fillMaxWidth().padding(vertical = 5.dp), corner = 22.dp) {
                             // 裁剪到卡片圆角内：左滑时行内容与露出的删除键都不会溢出到卡片外面。
                             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp))) {
-                                DayHeader(day)
+                                DayHeader(day, onLongPress = { addForDate = day.date })
                                 dayList.forEachIndexed { index, txn ->
                                     // 按账单 id 绑定滑动状态：删除一笔后，其它行不会继承它的滑动位置。
                                     key(txn.id) {
@@ -260,6 +264,20 @@ fun DetailScreen(state: AppState, nav: NavStack) {
             onConfirm = { state.month = it; showMonthPicker = false }
         )
     }
+
+    addForDate?.let { d ->
+        ConfirmDialog(
+            title = "在" + Dates.dayHeader(d) + "补记一笔？",
+            text = "记账页的日期会设为 " + d + "，只对这一笔记账生效；保存后日期自动回到今天，之后的新记账不受影响。",
+            confirmText = "去记一笔",
+            onConfirm = {
+                addForDate = null
+                state.presetDate = d
+                state.pendingTab = 1
+            },
+            onDismiss = { addForDate = null }
+        )
+    }
 }
 
 @Composable
@@ -271,10 +289,13 @@ private fun SummaryCell(label: String, value: String, color: androidx.compose.ui
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DayHeader(day: DayTotal) {
+private fun DayHeader(day: DayTotal, onLongPress: () -> Unit = {}) {
     Row(
-        Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 4.dp),
+        Modifier.fillMaxWidth()
+            .combinedClickable(onClick = {}, onLongClick = onLongPress)
+            .padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(Dates.dayHeader(day.date), style = MaterialTheme.typography.labelLarge)

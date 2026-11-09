@@ -109,6 +109,8 @@ fun EntryScreen(state: AppState, nav: NavStack) {
     var merchant by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     var date by remember { mutableStateOf(Dates.today()) }
+    // 补记模式：由「明细」长按某一天进入，只对这一笔记账生效，保存后自动回到今天。
+    var presetApplied by remember { mutableStateOf(false) }
     var hhmm by remember { mutableStateOf(Dates.formatMinute(System.currentTimeMillis()).substring(11, 16)) }
     var images by remember { mutableStateOf(listOf<String>()) }
     var basis by remember { mutableStateOf(ClassifyBasis.MANUAL) }
@@ -129,7 +131,7 @@ fun EntryScreen(state: AppState, nav: NavStack) {
 
     LaunchedEffect(state.presetDate) {
         val d = state.presetDate
-        if (!d.isNullOrEmpty()) { date = d; state.presetDate = null }
+        if (!d.isNullOrEmpty()) { date = d; presetApplied = true; state.presetDate = null }
     }
     LaunchedEffect(ledgerId, accounts.size) {
         if (accountId == null || accounts.none { it.id == accountId }) accountId = accounts.firstOrNull()?.id
@@ -259,6 +261,8 @@ fun EntryScreen(state: AppState, nav: NavStack) {
                     state.refundTarget = null; type = TxnType.EXPENSE
                     categoryId = null; nature = null; historyNote = ""
                 }
+                // 补记只作用于这一笔：存完立刻回到今天，后续记账恢复正常日期。
+                if (presetApplied) { date = Dates.today(); presetApplied = false }
                 state.touch()
                 toast = if (wasRefund) "已记录退款，本月支出已相应抵减" else "已保存到「" + state.currentLedger().name + "」"
                 if (!wasRefund && type != TxnType.TRANSFER && AiLearn.eligible(learnMerchant, learnCategory, learnNature)) {
@@ -324,11 +328,7 @@ fun EntryScreen(state: AppState, nav: NavStack) {
                     // 收入没有长期/即时消费之分，只对支出（含退款）显示性质。
                     if (type != TxnType.TRANSFER && type != TxnType.INCOME) {
                         Spacer(Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Nature.entries.forEach { n ->
-                                ChipButton(n.label, nature == n) { nature = n; natureTouched = true }
-                            }
-                        }
+                        NatureChoiceRow(nature = nature, noneLabel = null) { nature = it; natureTouched = true }
                     }
                 }
             }
@@ -336,7 +336,7 @@ fun EntryScreen(state: AppState, nav: NavStack) {
 
             // 日期 / 时间 / 账户 / 图片：同一行胶囊，替代原先的整块表单
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                MiniChip(Dates.dayHeader(date)) { showDate = true }
+                MiniChip(if (presetApplied) Dates.dayHeader(date) + " · 补记" else Dates.dayHeader(date)) { showDate = true }
                 MiniChip(hhmm) { showTime = true }
                 if (type == TxnType.TRANSFER) {
                     MiniChip("转出 " + (state.account(accountId)?.name ?: "选择")) { showAccount = true }
@@ -349,6 +349,14 @@ fun EntryScreen(state: AppState, nav: NavStack) {
                     pickImages.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }
                 MiniIcon(Icons.Default.PhotoCamera) { showCameraPurpose = true }
+            }
+            if (presetApplied) {
+                Text(
+                    "补记：这一次记到 " + date + "，保存后日期自动回到今天",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 2.dp, top = 6.dp)
+                )
             }
             if (images.isNotEmpty()) {
                 Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
